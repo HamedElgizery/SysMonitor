@@ -1,0 +1,11 @@
+cpu all
+usr 9.04
+nice 0.04
+sys 2.45
+iowait 2.38
+irq 0.0
+soft 0.09
+steal 0.0
+guest 0.02
+gnice 0.0
+idle 85.99

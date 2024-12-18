@@ -1,0 +1,4 @@
+Core +64.0°C
+Core +70.0°C
+Core +64.0°C
+Core +68.0°C
