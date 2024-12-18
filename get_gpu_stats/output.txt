@@ -1,0 +1,16 @@
+name QuadroP3000
+utilization.gpu-[%] 25%
+utilization.memory-[%] 17%
+utilization.encoder-[%] 0%
+utilization.decoder-[%] 0%
+fan.speed-[%] [N/A]
+temperature.gpu 58
+memory.total-[MiB] 6144MiB
+memory.free-[MiB] 4831MiB
+memory.used-[MiB] 1227MiB
+power.draw-[W] 13.11W
+power.max_limit-[W] 75.00W
+clocks.current.sm-[MHz] 810MHz
+clocks.current.memory-[MHz] 810MHz
+clocks.current.graphics-[MHz] 810MHz
+clocks.current.video-[MHz] 721MHz
