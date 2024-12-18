@@ -8,5 +8,17 @@ csv_stream = io.StringIO(csv_data)
 
 csv_reader = csv.DictReader(csv_stream)
 for row in csv_reader:
-    for col_heading, value in row.items():
-        print(col_heading.strip().replace(" ", "-"), value.strip().replace(" ", ""))
+    for i, (col_heading, col_value) in enumerate(row.items()):
+        col_heading = col_heading.strip().replace(" ", "-")
+        col_value = col_value.strip()
+
+        if i == 0: # first case is the gpu name
+            col_value = col_value.replace(" ", "-")
+        elif "temperature" in col_heading:
+            col_value += "°C"
+        elif col_value.endswith("%"):
+            col_value = col_value.replace(" ", "")
+        else:
+            col_value = col_value.replace(" ", "")
+
+        print(col_heading, col_value)
