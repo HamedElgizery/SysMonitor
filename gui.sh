@@ -121,32 +121,28 @@ while true; do
 
   elif [ "$selection" == "Memory Usage" ]; then
     while true; do
-      echo "HERE"
       if [ -f "get_memory_usage/getmem.sh" ]; then
         mem_output=$(bash get_memory_usage/getmem.sh)
-
-        mem_rows=""
+        mem_rows=$(printf " %-14s %s " "Metric" "Value")
+        mem_rows+='\n'
         while IFS= read -r line; do
           key=$(echo "$line" | awk '{print $1}')
           value=$(echo "$line" | awk '{print $2}')
-          mem_rows+="$key $value "
+          mem_rows+=$(printf " %-14s %d KB " $key $value)
+          mem_rows+='\n'
         done <<< "$mem_output"
 
-        response=$(zenity --list \
-          --title="Memory Usage Details" \
-          --text="Memory Usage metrics:" \
-          --width=600 \
-          --height=400 \
-          --column="Metric" --column="Value" \
-          $mem_rows)
+        TERM=ansi whiptail --title "Memory Usage" \
+          --infobox "$(printf "$mem_rows")" 25 32
 
         [ $? -eq 1 ] && break
+        read -t 0.1 -r -s -N 1 && [[ $REPLY == 'q' ]] && break
       else
         zenity --error --text="The script get_memory_usage/getmem.sh was not found."
         break
       fi
-      sleep 3
     done
+    clear
 
   elif [ "$selection" == "Network Stats" ]; then
     while true; do
