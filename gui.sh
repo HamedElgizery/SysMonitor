@@ -84,7 +84,24 @@ while true; do
           available_space=$(echo "$line" | awk '{print $4}')
           used_precentage=$(echo "$line" | awk '{print $5}')
 
-          disk_rows+="$disk_name $total_space $used_space $available_space $used_precentage "
+          # Check if disk is a SMART Disk
+          # TODO: Would it unintentionally eliminate partitions and some Disks in some cases?
+
+          smart_line=$(smartctl -H $disk_name | grep "INQUERY faild")
+          if [ "$smart_line" != "" ]; then
+            echo "Skipping $disk_name"
+            continue
+          fi
+          smart_line=$(smartctl -H $disk_name | grep "PASSED")
+          if [ "$smart_line" != "" ]; then
+            smart_status="PASSED"
+          else
+            smart_status="FAILED"
+          fi
+
+
+
+          disk_rows+="$disk_name $total_space $used_space $available_space $used_precentage $smart_status"
         done <<< "$disk_output"
 
         response=$(zenity --list \
@@ -93,7 +110,7 @@ while true; do
           --width=600 \
           --height=400 \
           --column="Disk Name" --column="Total Space" --column="Used Space" \
-          --column="Available Space" --column="Used Percentage" \
+          --column="Available Space" --column="Used Percentage" --column="SMART Status" \
           $disk_rows)
 
         [ $? -eq 1 ] && break
