@@ -1,7 +1,7 @@
 #!/bin/bash
 
 while true; do
-  docker_call="sudo docker exec -it sys_stats"
+  #docker_call="sudo docker exec -it sys_stats"
   # Create a Zenity list dialog with options
   selection=$(zenity --list \
     --title="System Performance Options" \
@@ -47,35 +47,35 @@ while true; do
       if [ -f "get_gpu_stats/getgpu.sh" ]; then
         gpu_output=$(bash get_gpu_stats/getgpu.sh)
 
-        gpu_rows=""
+        # TODO: Handle errors and check type of GPU
+        gpu_rows="Metric Value\n"
         while IFS= read -r line; do
           key=$(echo "$line" | awk '{print $1}')
           value=$(echo "$line" | awk '{print $2}')
-          gpu_rows+="$key $value "
+          gpu_rows+="$key $value\n"
         done <<< "$gpu_output"
 
-        response=$(zenity --list \
-          --title="GPU Performance Details" \
-          --text="GPU Performance metrics:" \
-          --width=600 \
-          --height=400 \
-          --column="Metric" --column="Value" \
-          $gpu_rows)
+        TERM=ansi whiptail --title "GPU Performance Details" \
+          --infobox "$gpu_rows" 30 52 
 
         [ $? -eq 1 ] && break
+        read -t 0.1 -r -s -N 1 && [[ $REPLY == 'q' ]] && break
       else
         zenity --error --text="The script get_gpu_stats/getgpu.sh was not found."
         break
       fi
-      sleep 3
     done
+    clear
 
   elif [ "$selection" == "Disk Usage" ]; then
     while true; do
       if [ -f "get_disk_usage/getdisk.sh" ]; then
         disk_output=$(bash get_disk_usage/getdisk.sh)
 
-        disk_rows=""
+        disk_rows="$(printf "%15s | %15s | %15s | %15s | %15s | %15s" \
+                    "Disk Name" "Totatl Space" "Used Space" "Free Space" "Used Percntage" "Smart Status"
+                  )" 
+        disk_rows+='\n'
         while IFS= read -r line; do
           disk_name=$(echo "$line" | awk '{print $1}')
           total_space=$(echo "$line" | awk '{print $2}')
@@ -86,39 +86,35 @@ while true; do
           # Check if disk is a SMART Disk
           # TODO: Would it unintentionally eliminate partitions and some Disks in some cases?
 
-          smart_line=$(smartctl -H $disk_name | grep "INQUERY faild")
+          smart_line=$(sudo smartctl -H $disk_name | grep "INQUERY faild")
           if [ "$smart_line" != "" ]; then
             echo "Skipping $disk_name"
             continue
           fi
-          smart_line=$(smartctl -H $disk_name | grep "PASSED")
+          smart_line=$(sudo smartctl -H $disk_name | grep "PASSED")
+          smart_status=""
           if [ "$smart_line" != "" ]; then
             smart_status="PASSED"
           else
             smart_status="FAILED"
           fi
-
-
-
-          disk_rows+="$disk_name $total_space $used_space $available_space $used_precentage $smart_status"
+          
+          disk_rows+="$(printf "%15s | %15s | %15s | %15s | %15s%% | %15s" $disk_name $total_space $used_space $available_space $used_precentage $smart_status)"
+          disk_rows+='\n'
         done <<< "$disk_output"
-
-        response=$(zenity --list \
-          --title="Disk Usage Details" \
-          --text="Disk Usage metrics:" \
-          --width=600 \
-          --height=400 \
-          --column="Disk Name" --column="Total Space" --column="Used Space" \
-          --column="Available Space" --column="Used Percentage" --column="SMART Status" \
-          $disk_rows)
+        
+        #TODO: Add verticle scroll bar
+        TERM=ansi whiptail --title "Disk Usage Details" \
+          --infobox "$(printf "$disk_rows")" 30 120
 
         [ $? -eq 1 ] && break
+        read -t 0.1 -r -s -N 1 && [[ $REPLY == 'q' ]] && break
       else
         zenity --error --text="The script get_disk_usage/getdisk.sh was not found."
         break
       fi
-      sleep 3
     done
+    clear
 
   elif [ "$selection" == "Memory Usage" ]; then
     while true; do
