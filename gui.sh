@@ -20,28 +20,26 @@ while true; do
       if [ -f "get_cpu_perf/getcpu.sh" ]; then
         output=$(bash get_cpu_perf/getcpu.sh)
 
-        rows=""
+        rows=$(printf "  Metric  Value  ")
+        rows+='\n'
         while IFS= read -r line; do
           key=$(echo "$line" | awk '{print $1}')
           value=$(echo "$line" | awk '{print $2}')
-          rows+="$key $value "
+          rows+=$(printf "  %-6s  %5.2f  " $key $value)
+          rows+='\n'
         done <<< "$output"
 
-        response=$(zenity --list \
-          --title="CPU Performance Details" \
-          --text="CPU Performance metrics:" \
-          --width=600 \
-          --height=400 \
-          --column="Metric" --column="Value" \
-          $rows)
+        TERM=ansi whiptail --title "CPU Performance Details" \
+          --infobox "$(printf "$rows")" 20 21 
 
         [ $? -eq 1 ] && break
+        read -t 0.1 -r -s -N 1 && [[ $REPLY == 'q' ]] && break
       else
         zenity --error --text="The script get_cpu_perf/getcpu.sh was not found."
         break
       fi
-      sleep 3
     done
+    clear
 
   elif [ "$selection" == "GPU Performance" ]; then
     while true; do
