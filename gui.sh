@@ -1,6 +1,7 @@
 #!/bin/bash
 
 while true; do
+  docker_call="sudo docker exec -it sys_stats"
   # Create a Zenity list dialog with options
   selection=$(zenity --list \
     --title="System Performance Options" \
@@ -122,7 +123,7 @@ while true; do
   elif [ "$selection" == "Memory Usage" ]; then
     while true; do
       if [ -f "get_memory_usage/getmem.sh" ]; then
-        mem_output=$(bash get_memory_usage/getmem.sh)
+        mem_output=$($docker_call "get_memory_usage/getmem.sh" | tr -d '\r')
         mem_rows=$(printf " %-14s %s " "Metric" "Value")
         mem_rows+='\n'
         while IFS= read -r line; do
