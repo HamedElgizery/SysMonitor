@@ -2,6 +2,8 @@
 
 while true; do
   # Create a Zenity list dialog with options
+  docker_call="sudo docker exec -it sys_stats"
+
   selection=$(zenity --list \
     --title="System Performance Options" \
     --text="Choose an option to view more details:" \
@@ -18,7 +20,7 @@ while true; do
   if [ "$selection" == "CPU Performance" ]; then
     while true; do
       if [ -f "get_cpu_perf/getcpu.sh" ]; then
-        output=$(bash get_cpu_perf/getcpu.sh)
+        output=$($docker_call bash -c "get_cpu_perf/getcpu.sh")
 
         rows=""
         while IFS= read -r line; do
@@ -46,8 +48,8 @@ while true; do
   elif [ "$selection" == "GPU Performance" ]; then
     while true; do
       if [ -f "get_gpu_stats/getgpu.sh" ]; then
-        gpu_output=$(bash get_gpu_stats/getgpu.sh)
 
+        gpu_output=$($docker_call bash -c "get_gpu_stats/getgpu.sh")
         gpu_rows=""
         while IFS= read -r line; do
           key=$(echo "$line" | awk '{print $1}')
@@ -74,7 +76,7 @@ while true; do
   elif [ "$selection" == "Disk Usage" ]; then
     while true; do
       if [ -f "get_disk_usage/getdisk.sh" ]; then
-        disk_output=$(bash get_disk_usage/getdisk.sh)
+        disk_output=$($docker_call bash -c "get_disk_usage/getdisk.sh")
 
         disk_rows=""
         while IFS= read -r line; do
@@ -125,7 +127,7 @@ while true; do
     while true; do
       echo "HERE"
       if [ -f "get_memory_usage/getmem.sh" ]; then
-        mem_output=$(bash get_memory_usage/getmem.sh)
+        mem_output=$($docker_call bash -c "get_memory_usage/getmem.sh")
 
         mem_rows=""
         while IFS= read -r line; do
@@ -153,7 +155,7 @@ while true; do
   elif [ "$selection" == "Network Stats" ]; then
     while true; do
       if [ -f "get_net_stats/getnet.sh" ]; then
-        net_output=$(bash get_net_stats/getnet.sh)
+        net_output=$($docker_call bash -c "get_net_stats/getnet.sh")
 
         net_rows=""
         while IFS= read -r line; do
@@ -196,7 +198,7 @@ while true; do
   elif [ "$selection" == "System Load" ]; then
     while true; do
       if [ -f "get_sys_load/getload.sh" ]; then
-        sys_output=$(bash get_sys_load/getload.sh)
+        sys_output=$($docker_call bash -c "get_sys_load/getload.sh")
 
         sys_rows=""
         while IFS= read -r line; do
