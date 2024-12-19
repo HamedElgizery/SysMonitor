@@ -123,6 +123,7 @@ while true; do
 
   elif [ "$selection" == "Memory Usage" ]; then
     while true; do
+      echo "HERE"
       if [ -f "get_memory_usage/getmem.sh" ]; then
         mem_output=$(bash get_memory_usage/getmem.sh)
 
@@ -191,6 +192,35 @@ while true; do
       fi
       sleep 3
     done
+
+  elif [ "$selection" == "System Load" ]; then
+    while true; do
+      if [ -f "get_sys_load/getload.sh" ]; then
+        sys_output=$(bash get_sys_load/getload.sh)
+
+        sys_rows=""
+        while IFS= read -r line; do
+          key=$(echo "$line" | awk '{print $1}')
+          value=$(echo "$line" | awk '{print $2}')
+          sys_rows+="$key $value "
+        done <<< "$sys_output"
+
+        response=$(zenity --list \
+          --title="System Metircs" \
+          --text="Syste Metrics:" \
+          --width=600 \
+          --height=400 \
+          --column="Duration" --column="Value" \
+          $sys_rows)
+
+        [ $? -eq 1 ] && break
+      else
+        zenity --error --text="The script get_sys_load/getload.sh was not found."
+        break
+      fi
+      sleep 3
+    done
+
   else
     break
   fi
