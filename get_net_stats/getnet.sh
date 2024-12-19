@@ -1,3 +1,4 @@
 #!/bin/bash
+SCRIPT_DIR="$(dirname "$0")"
 
-./process_net.py "$(ip -s -j link)" > output.txt
+$SCRIPT_DIR/process_net.py "$(ip -s -j link)"

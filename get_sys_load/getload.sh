@@ -1,3 +1,4 @@
 #!/bin/bash
+SCRIPT_DIR="$(dirname "$0")"
 
-./process_uptime.py "$(uptime)" > output.txt
+$SCRIPT_DIR/process_uptime.py "$(uptime)"

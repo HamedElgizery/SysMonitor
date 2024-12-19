@@ -5,14 +5,20 @@ from sys import argv
 
 network_stats_json = argv[1]
 
-
 stats = json.loads(network_stats_json)
 for interface in stats:
-    print(interface['stats64'])
+    if_name = interface.get('ifname', "unknown")
+    stats = interface.get('stats64', "") 
 
-# for interface in stats:
-#     iface_name = interface.get("ifname", "Unknown")
-#     rx_stats = interface.get("stats", {}).get("rx_bytes", 0)
-#     tx_stats = interface.get("stats", {}).get("tx_bytes", 0)
-    
-#     print(f"{iface_name} {rx_stats}-{tx_stats}")
+    rx = stats.get('rx', {})
+    tx = stats.get('tx', {})
+    payload = f"{if_name} "
+
+    for value in rx.values():
+        payload += f"{value} "
+
+    for value in tx.values():
+        payload += f"{value} "
+
+
+    print(payload)

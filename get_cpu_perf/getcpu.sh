@@ -1,3 +1,4 @@
 #!/bin/bash
+SCRIPT_DIR="$(dirname "$0")"
 
- ./process_cpu.py "$(mpstat -o JSON)" > cpu_perf.txt
+$SCRIPT_DIR/process_cpu.py "$(mpstat -o JSON)"
