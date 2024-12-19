@@ -146,7 +146,10 @@ while true; do
       if [ -f "get_net_stats/getnet.sh" ]; then
         net_output=$(bash get_net_stats/getnet.sh)
 
-        net_rows=""
+        net_rows=$(printf "%-9s | %6s | %8s | %5s | %8s | %10s | %10s | %6s | %8s | %5s | %8s | %13s | %11s" \
+                  "Interface" "RBytes" "RPackets" "RErrs" "RDropped" "ROver Errs" \
+                "RMulticast" "TBytes" "TPackets" "TErrs" "TDropped" "TCarrier Errs" "TCollisions")
+        net_rows+='\n'
         while IFS= read -r line; do
           if_name=$(echo "$line" | awk '{print $1}')
           rx_bytes=$(echo "$line" | awk '{print $2}')
@@ -161,60 +164,77 @@ while true; do
           tx_dropped=$(echo "$line" | awk '{print $11}')
           tx_carrier_errors=$(echo "$line" | awk '{print $12}')
           tx_collisions=$(echo "$line" | awk '{print $13}')
-
-          net_rows+="$if_name $rx_bytes $rx_packets $rx_errors $rx_dropped $rx_over_errors $rx_multicast $tx_bytes $tx_packets $tx_errors $tx_dropped $tx_carrier_errors $tx_collisions "
+          rx_bytes_units="B" 
+          tx_bytes_units="B" 
+          if [ $rx_bytes -ge 1024 ] ; then
+            rx_bytes_units="KB"
+            rx_bytes=$((rx_bytes/1024))
+          fi
+          if [ $tx_bytes -ge 1024 ] ; then
+            tx_bytes_units="KB"
+            tx_bytes=$((tx_bytes/1024))
+          fi
+          if [ $rx_bytes -ge 1024 ] ; then
+            rx_bytes_units="MB"
+            rx_bytes=$((rx_bytes/1024))
+          fi
+          if [ $tx_bytes -ge 1024 ] ; then
+            tx_bytes_units="MB"
+            tx_bytes=$((tx_bytes/1024))
+          fi
+          if [ $rx_bytes -ge 1024 ] ; then
+            rx_bytes_units="GB"
+            rx_bytes=$((rx_bytes/1024))
+          fi
+          if [ $tx_bytes -ge 1024 ] ; then
+            tx_bytes_units="GB"
+            tx_bytes=$((tx_bytes/1024))
+          fi
+          net_rows+=$(printf "%-9s | %4s%2s | %8s | %5s | %8s | %10s | %10s | %4s%2s | %8s | %5s | %8s | %13s | %11s" $if_name $rx_bytes $rx_bytes_units $rx_packets $rx_errors $rx_dropped $rx_over_errors $rx_multicast $tx_bytes $tx_bytes_units $tx_packets $tx_errors $tx_dropped $tx_carrier_errors $tx_collisions )
+          net_rows+='\n'
         done <<< "$net_output"
 
-        response=$(zenity --list \
-          --title="Network Statistics" \
-          --text="Network interface statistics:" \
-          --width=800 \
-          --height=400 \
-          --column="Interface" --column="RX Bytes" --column="RX Packets" --column="RX Errors" \
-          --column="RX Dropped" --column="RX Over Errors" --column="RX Multicast" \
-          --column="TX Bytes" --column="TX Packets" --column="TX Errors" \
-          --column="TX Dropped" --column="TX Carrier Errors" --column="TX Collisions" \
-          $net_rows)
+        TERM=ansi whiptail --title "Network Statistics" \
+          --infobox "$(printf "$net_rows")" 10 150 
 
         [ $? -eq 1 ] && break
+        read -t 0.1 -r -s -N 1 && [[ $REPLY == 'q' ]] && break
       else
         zenity --error --text="The script get_net_stats/getnet.sh was not found."
         break
       fi
-      sleep 3
     done
+    clear
 
   elif [ "$selection" == "System Load" ]; then
     while true; do
       if [ -f "get_sys_load/getload.sh" ]; then
         sys_output=$(bash get_sys_load/getload.sh)
 
-        sys_rows=""
+        sys_rows=$(printf "%-20s %20s" "Duration" "Value")
+        sys_rows+='\n'
         while IFS= read -r line; do
           key=$(echo "$line" | awk '{print $1}')
           value=$(echo "$line" | awk '{print $2}')
-          sys_rows+="$key $value "
+          sys_rows+="$(printf "%-20s %20s" $key $value)"
+          sys_rows+='\n'
         done <<< "$sys_output"
 
-        response=$(zenity --list \
-          --title="System Metircs" \
-          --text="Syste Metrics:" \
-          --width=600 \
-          --height=400 \
-          --column="Duration" --column="Value" \
-          $sys_rows)
+        TERM=ansi whiptail --title "System Metrics" \
+          --infobox "$(printf "$sys_rows")" 10 50
 
         [ $? -eq 1 ] && break
+        read -t 0.1 -r -s -N 1 && [[ $REPLY == 'q' ]] && break
       else
         zenity --error --text="The script get_sys_load/getload.sh was not found."
         break
       fi
-      sleep 3
     done
+    clear
 
   else
+    clear
     break
   fi
 
-  sleep 3
 done
