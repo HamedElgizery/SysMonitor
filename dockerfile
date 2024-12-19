@@ -1,6 +1,15 @@
 FROM ubuntu:20.04
 
-RUN apt-get update && apt-get install -y sudo lm-sensors smartmontools sysstat
+RUN apt-get update && apt-get install -y \
+    sudo \
+    lm-sensors \
+    smartmontools \
+    sysstat \
+    python3 \
+    python3-pip \
+    python3-venv 
+
+
 RUN yes "" | sudo sensors-detect || true
 
 WORKDIR /scripts
