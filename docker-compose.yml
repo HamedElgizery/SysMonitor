@@ -1,0 +1,17 @@
+services:
+  monitoring:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    runtime: nvidia
+    volumes:
+      - /sys:/sys
+      - /proc:/proc
+    privileged: true
