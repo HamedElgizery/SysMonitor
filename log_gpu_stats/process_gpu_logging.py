@@ -27,4 +27,4 @@ for row in csv_reader:
 
         log_entry.append(f"{col_value}")
 
-print(", ".join(log_entry))
+print(",".join(log_entry))
