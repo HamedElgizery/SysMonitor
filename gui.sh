@@ -19,6 +19,7 @@ while true; do
 
   if [ "$selection" == "CPU Performance" ]; then
     while true; do
+      #TODO: Display temperature 
       if [ -f "get_cpu_perf/getcpu.sh" ]; then
         output=$($docker_call bash -c "get_cpu_perf/getcpu.sh" | tr -d '\r')
 
