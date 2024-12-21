@@ -7,7 +7,7 @@ while true; do
       if [ -d "$dir" ]; then
         for script in "$dir"*.sh; do
             if [ -f "$script" ]; then
-                bash "$script"
+                bash "$script" >> /logs/logoutput.txt
             fi
         done
       fi
