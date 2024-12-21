@@ -4,7 +4,7 @@ from sys import argv
 from mdutils.mdutils import MdUtils
 from datetime import datetime
 
-report_name = str(argv[1])
+report_name = "/reports/"+str(argv[1])
 # Read data from shared docker volume
 
 def get_cpu_temp():

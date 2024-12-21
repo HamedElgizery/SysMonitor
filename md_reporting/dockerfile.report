@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y \
     python3-venv
 
 RUN pip install mdutils
-
+RUN mkdir /reports
 WORKDIR /scripts
 COPY generate_report.py /scripts/
 COPY reporting.sh /scripts
