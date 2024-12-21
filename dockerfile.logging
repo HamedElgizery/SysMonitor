@@ -14,8 +14,8 @@ RUN apt-get update && apt-get install -y \
 RUN yes "" | sudo sensors-detect || true
 
 WORKDIR /scripts
-COPY get_cpu_perf /scripts/get_cpu_perf
-COPY get_cpu_temp /scripts/get_cpu_temp
+COPY log_cpu_perf /scripts/log_cpu_perf
+COPY log_cpu_temp /scripts/log_cpu_temp
 COPY log_disk_usage /scripts/log_disk_usage
 COPY log_gpu_stats /scripts/log_gpu_stats
 COPY get_memory_usage /scripts/get_memory_usage
