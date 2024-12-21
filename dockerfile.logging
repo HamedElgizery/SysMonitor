@@ -18,7 +18,7 @@ COPY log_cpu_perf /scripts/log_cpu_perf
 COPY log_cpu_temp /scripts/log_cpu_temp
 COPY log_disk_usage /scripts/log_disk_usage
 COPY log_gpu_stats /scripts/log_gpu_stats
-COPY get_memory_usage /scripts/get_memory_usage
+COPY log_memory_usage /scripts/log_memory_usage
 COPY log_net_stats /scripts/log_net_stats
 COPY log_sys_load /scripts/log_sys_load
 COPY logger.sh /scripts
