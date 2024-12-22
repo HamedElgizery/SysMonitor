@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Load Logging</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+
+        #chart-container {
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        #history {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: #fff;
+        }
+
+        .log-entry {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        canvas {
+            max-width: 100%;
+        }
+
+        .description {
+            margin: 20px;
+            font-size: 1em;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>System Load Logging</h1>
+
+    <div class="description">
+        <p>
+            The system load averages represent the average CPU load over 1, 5, and 15 minutes. 
+            Lower values indicate a less busy system, while higher values suggest higher demand on resources.
+        </p>
+    </div>
+
+    <table id="system-load-values">
+        <thead>
+            <tr>
+                <th>Metric</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Load rows will be populated dynamically -->
+        </tbody>
+    </table>
+
+    <div id="chart-container">
+        <h2>System Load Trends</h2>
+        <canvas id="system-load-chart"></canvas>
+    </div>
+
+    <h2>History</h2>
+    <div id="history">
+        <!-- History will be appended dynamically -->
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const loadMetrics = [
+            { name: '1-min-average', value: 0 },
+            { name: '5-min-average', value: 0 },
+            { name: '15-min-average', value: 0 }
+        ];
+
+        const loadTableBody = document.querySelector('#system-load-values tbody');
+        const systemLoadChartCtx = document.getElementById('system-load-chart').getContext('2d');
+        const historyDiv = document.getElementById('history');
+
+        const systemLoadChart = new Chart(systemLoadChartCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: loadMetrics.map(metric => ({
+                    label: metric.name,
+                    data: [],
+                    fill: false,
+                    borderColor: `#${Math.floor(Math.random()*16777215).toString(16)}`,
+                    tension: 0.1
+                }))
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Load Average'
+                        }
+                    }
+                }
+            }
+        });
+
+        function updateLoadTable() {
+            loadTableBody.innerHTML = '';
+            loadMetrics.forEach(metric => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${metric.name}</td><td>${metric.value.toFixed(2)}</td>`;
+                loadTableBody.appendChild(row);
+            });
+        }
+
+        function fetchLoadData() {
+            return fetch('http://localhost:3000/getsysload')
+                .then(response => response.json())
+                .then(data => {
+                    loadMetrics[0].value = data.metrics[0];
+                    loadMetrics[1].value = data.metrics[1];
+                    loadMetrics[2].value = data.metrics[2];
+                });
+        }
+
+        function updateLoadChart() {
+            const timestamp = new Date().toLocaleTimeString();
+            systemLoadChart.data.labels.push(timestamp);
+
+            systemLoadChart.data.datasets.forEach((dataset, index) => {
+                dataset.data.push(loadMetrics[index].value);
+            });
+
+            if (systemLoadChart.data.labels.length > 10) {
+                systemLoadChart.data.labels.shift();
+                systemLoadChart.data.datasets.forEach(dataset => dataset.data.shift());
+            }
+
+            systemLoadChart.update();
+        }
+
+        function logHistory() {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.textContent = `${timestamp} - ` + loadMetrics.map(m => `${m.name}: ${m.value.toFixed(2)}`).join(', ');
+            historyDiv.appendChild(logEntry);
+
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+        }
+
+        function updatePage() {
+            fetchLoadData().then(() => {
+                updateLoadTable();
+                updateLoadChart();
+                logHistory();
+            });
+        }
+
+        updatePage();
+
+        setInterval(updatePage, 10000);
+    </script>
+</body>
+</html>

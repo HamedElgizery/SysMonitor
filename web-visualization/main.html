@@ -3,309 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logging System</title>
+    <title>Navigation Page</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
             background-color: #f4f4f9;
             color: #333;
-        }
-
-        h1, h2 {
             text-align: center;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
+        h1 {
             margin-bottom: 20px;
         }
 
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: center;
+        ul {
+            list-style-type: none;
+            padding: 0;
         }
 
-        th {
-            background-color: #007BFF;
-            color: white;
+        li {
+            margin: 10px 0;
         }
 
-        #history {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            padding: 10px;
-            background: #fff;
+        a {
+            text-decoration: none;
+            color: #007BFF;
+            font-size: 1.2em;
         }
 
-        .log-entry {
-            font-size: 0.9em;
-            margin-bottom: 5px;
-            padding: 5px;
-            border-bottom: 1px solid #eee;
-        }
-
-        #chart-container {
-            width: 100%;
-            margin: 20px 0;
-        }
-
-        canvas {
-            max-width: 100%;
+        a:hover {
+            color: #0056b3;
         }
     </style>
 </head>
 <body>
-    <h1>Logging System</h1>
-
-    <table id="current-values">
-        <thead>
-            <tr>
-                <th>Metric</th>
-                <th>Value</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Rows will be populated dynamically -->
-        </tbody>
-    </table>
-
-    <h2>Core Temperatures</h2>
-    <table id="core-temperatures">
-        <thead>
-            <tr>
-                <th>Core</th>
-                <th>Temperature</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Core temperature rows will be populated dynamically -->
-        </tbody>
-    </table>
-
-    <div id="chart-container">
-        <h2>Core Temperature Trends</h2>
-        <canvas id="core-trend-chart"></canvas>
-        <h2>CPU Metrics Trends</h2>
-        <canvas id="cpu-trend-chart"></canvas>
-    </div>
-
-    <h2>History</h2>
-    <div id="history">
-        <!-- History will be appended dynamically -->
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        const metrics = [
-            { name: 'USR', value: 0 },
-            { name: 'NICE', value: 0 },
-            { name: 'SYS', value: 0 },
-            { name: 'IOWAIT', value: 0 },
-            { name: 'IRQ', value: 0.0 },
-            { name: 'SOFT', value: 0.07 },
-            { name: 'STEAL', value: 0.0 },
-            { name: 'GUEST', value: 0.0 },
-            { name: 'GNICE', value: 0.0 },
-            { name: 'IDLE', value: 0 },
-        ];
-
-        const cores = [
-            { core: 'Core-0', temperature: 0 },
-            { core: 'Core-1', temperature: 0 },
-            { core: 'Core-2', temperature: 0 },
-            { core: 'Core-3', temperature: 0 },
-        ];
-0
-        const tableBody = document.querySelector('#current-values tbody');
-        const coreTableBody = document.querySelector('#core-temperatures tbody');
-        const historyDiv = document.getElementById('history');
-        const coreTrendChartCtx = document.getElementById('core-trend-chart').getContext('2d');
-        const cpuTrendChartCtx = document.getElementById('cpu-trend-chart').getContext('2d');
-
-        const coreTrendChart = new Chart(coreTrendChartCtx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: cores.map(core => ({
-                    label: core.core,
-                    data: [],
-                    fill: false,
-                    borderColor: `#${Math.floor(Math.random()*16777215).toString(16)}`,
-                    tension: 0.1
-                })).concat({
-                    label: 'Average Temperature',
-                    data: [],
-                    fill: false,
-                    borderColor: '#FF0000',
-                    borderDash: [5, 5],
-                    tension: 0.1
-                })
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top'
-                    }
-                },
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Time'
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Temperature (°C)'
-                        }
-                    }
-                }
-            }
-        });
-
-        const cpuTrendChart = new Chart(cpuTrendChartCtx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: metrics.map(metric => ({
-                    label: metric.name,
-                    data: [],
-                    fill: false,
-                    borderColor: `#${Math.floor(Math.random()*16777215).toString(16)}`,
-                    tension: 0.1
-                }))
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top'
-                    }
-                },
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Time'
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Value'
-                        }
-                    }
-                }
-            }
-        });
-
-        function updateCoreTable() {
-            coreTableBody.innerHTML = '';
-            let totalTemperature = 0;
-
-            cores.forEach(core => {
-                totalTemperature += core.temperature;
-                const row = document.createElement('tr');
-                row.innerHTML = `<td>${core.core}</td><td>${core.temperature.toFixed(1)}°C</td>`;
-                coreTableBody.appendChild(row);
-            });
-
-            const averageTemperature = (totalTemperature / cores.length).toFixed(1);
-            const row = document.createElement('tr');
-            row.innerHTML = `<td><strong>Average</strong></td><td><strong>${averageTemperature}°C</strong></td>`;
-            coreTableBody.appendChild(row);
-
-            return averageTemperature;
-        }
-
-        function fetchNewData() {
-            fetch('http://localhost:3000/getcpu')
-                .then(response => response.json())
-                .then(data => {
-                    console.log(data);
-                    metrics.forEach((metric, index) => {
-                        metric.value = data.metrics[index];
-                    });
-
-                    cores.forEach((core, index) => {
-                        core.temperature = data.cores[index];
-                    });
-                });
-        }
-
-        function updateCoreChart(averageTemperature) {
-            const timestamp = new Date().toLocaleTimeString();
-            coreTrendChart.data.labels.push(timestamp);
-
-            coreTrendChart.data.datasets.forEach((dataset, index) => {
-                if (index < cores.length) {
-                    dataset.data.push(cores[index].temperature);
-                } else {
-                    dataset.data.push(averageTemperature);
-                }
-            });
-
-            if (coreTrendChart.data.labels.length > 10) {
-                coreTrendChart.data.labels.shift();
-                coreTrendChart.data.datasets.forEach(dataset => dataset.data.shift());
-            }
-
-            coreTrendChart.update();
-        }
-
-        function updateCPUChart() {
-            const timestamp = new Date().toLocaleTimeString();
-            cpuTrendChart.data.labels.push(timestamp);
-
-            cpuTrendChart.data.datasets.forEach((dataset, index) => {
-                dataset.data.push(metrics[index].value);
-            });
-
-            if (cpuTrendChart.data.labels.length > 10) {
-                cpuTrendChart.data.labels.shift();
-                cpuTrendChart.data.datasets.forEach(dataset => dataset.data.shift());
-            }
-
-            cpuTrendChart.update();
-        }
-
-        function updateTable() {
-            tableBody.innerHTML = '';
-            metrics.forEach(metric => {
-                const row = document.createElement('tr');
-                row.innerHTML = `<td>${metric.name}</td><td>${metric.value.toFixed(2)}</td>`;
-                tableBody.appendChild(row);
-            });
-        }
-
-        function logHistory() {
-            const timestamp = new Date().toLocaleTimeString();
-            const logEntry = document.createElement('div');
-            logEntry.className = 'log-entry';
-            logEntry.textContent = `${timestamp} - ` + metrics.map(m => `${m.name}: ${m.value.toFixed(2)}`).join(', ') + ' | ' + cores.map(c => `${c.core}: ${c.temperature.toFixed(1)}°C`).join(', ');
-            historyDiv.appendChild(logEntry);
-
-            historyDiv.scrollTop = historyDiv.scrollHeight;
-        }
-
-        function updatePage() {
-            fetchNewData();
-            updateTable();
-            const averageTemperature = updateCoreTable();
-            updateCoreChart(averageTemperature);
-            updateCPUChart();
-            logHistory();
-        }
-
-        updatePage();
-
-        setInterval(updatePage, 10000);
-    </script>
+    <h1>System Monitoring Pages</h1>
+    <ul>
+        <li><a href="/cpu-page">CPU Monitoring Page</a></li>
+        <li><a href="/gpu-page">GPU Monitoring Page</a></li>
+        <li><a href="/disk-page">Disk Monitoring Page</a></li>
+        <li><a href="/mem-page">Memory Monitoring Page</a></li>
+        <li><a href="/net-page">Network Monitoring Page</a></li>
+        <li><a href="/sys-page">System Load Monitoring Page</a></li>
+    </ul>
 </body>
 </html>
