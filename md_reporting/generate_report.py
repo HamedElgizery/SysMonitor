@@ -38,18 +38,14 @@ def get_net_stats():
             lines.append(line)
             dev = line.split(',')[1]
             if dev in vis_dev:
-                print("HER")
                 add = 0
-            print(add)
             vis_dev.add(dev)
             cnt+=add
-    print(cnt)
     content = ["Interface", "RBytes", "RPackets", "Rerrs", "RDropped", "ROver Errs", "RMutlicast", "TBytes", "TPackets", "TErrs", "TDropped", "TCarrier Errs", "TCollisions"]
     for i in range(1, cnt + 1):
         values = lines[-i].split(',')[1:]
         for j in range(len(values)):
             content.append(values[j])
-    print(content)
     return (len(values), cnt + 1, content)
 
 def get_cpu_perf():
@@ -115,7 +111,6 @@ def add_section(report_file, content, title):
     report_file.new_header(level=2, title=title)
     report_file.new_table(columns=content[0], rows=content[1], text=content[2], text_align='center')
 
-print("EHEREE")
 report_file = MdUtils(file_name=report_name, title="Report {}".format(report_name))
 report_file.new_header(level=1, title="System Stats {}".format(datetime.fromtimestamp(1284286794)))
 add_section(report_file, get_cpu_temp(), title="CPU Temperature")
