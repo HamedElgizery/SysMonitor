@@ -11,9 +11,9 @@ fi
 
 sudo docker image build -t logging-image .
 
- sudo docker run --rm -dit --gpus all --privileged \
+ sudo docker run --rm -dit --gpus all --privileged --network host\
   --name sys_logging --mount \
   type=bind,src=/$PWD/logging,target=/logs logging-image 2>&1 || \
   echo "WARNING: Failed to detect GPU... Rerunning..." && sudo docker run --rm -dit \
-  --privileged --name sys_logging --mount \
+  --privileged --network host --name sys_logging --mount \
   type=bind,src=/$PWD/logging,target=/logs logging-image
