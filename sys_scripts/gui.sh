@@ -106,7 +106,7 @@ while true; do
         
         #TODO: Add verticle scroll bar
         TERM=ansi whiptail --title "Disk Usage Details" \
-          --infobox "$(printf "$disk_rows")" 30 120
+          --infobox "$(printf "$disk_rows")" 20 120
 
         [ $? -eq 1 ] && break
         read -t 0.2 -r -s -N 1 && [[ $REPLY == 'q' ]] && break

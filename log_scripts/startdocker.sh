@@ -1,11 +1,11 @@
-LOGGING_DIR=$PWD/loggging
+LOGGING_DIR=$PWD/logging
 
 if [ ! -d $LOGGING_DIR ]; then
-  echo "Stopping previous container..."
   mkdir $LOGGING_DIR 
 fi
 
 if [ "$(sudo docker ps | grep sys_logging)" != "" ]; then
+  echo "Stopping previous container..."
   sudo docker stop sys_logging
 fi
 
