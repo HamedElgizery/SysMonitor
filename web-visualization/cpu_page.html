@@ -225,7 +225,7 @@
         }
 
         function fetchNewData() {
-            fetch('http://localhost:3000/getcpu')
+            return fetch('http://localhost:3000/getcpu')
                 .then(response => response.json())
                 .then(data => {
                     console.log(data);
@@ -295,12 +295,14 @@
         }
 
         function updatePage() {
-            fetchNewData();
-            updateTable();
-            const averageTemperature = updateCoreTable();
-            updateCoreChart(averageTemperature);
-            updateCPUChart();
-            logHistory();
+            fetchNewData().then((value) => {
+                updateTable();
+                let averageTemperature = updateCoreTable();
+                updateCoreChart(averageTemperature);
+                updateCPUChart();
+                logHistory();
+            });
+           
         }
 
         updatePage();

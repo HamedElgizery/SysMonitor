@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Logging System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+
+        #chart-container {
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        #history {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: #fff;
+        }
+
+        .log-entry {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        canvas {
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Memory Logging System</h1>
+
+    <table id="memory-values">
+        <thead>
+            <tr>
+                <th>Metric</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Memory rows will be populated dynamically -->
+        </tbody>
+    </table>
+
+    <div id="chart-container">
+        <h2>Memory Usage Trends</h2>
+        <canvas id="memory-trend-chart"></canvas>
+    </div>
+
+    <h2>History</h2>
+    <div id="history">
+        <!-- History will be appended dynamically -->
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const memoryMetrics = [
+            { name: 'MemTotal', value: 0 },
+            { name: 'MemFree', value: 0 },
+            { name: 'MemAvailable', value: 0 },
+            { name: 'Buffers', value: 0 },
+            { name: 'Cached', value: 0 },
+            { name: 'SwapCached', value: 0 },
+            { name: 'Active', value: 0 },
+            { name: 'Inactive', value: 0 },
+            { name: 'Active(anon)', value: 0 },
+            { name: 'Inactive(anon)', value: 0 },
+            { name: 'Active(file)', value: 0 },
+            { name: 'Inactive(file)', value: 0 },
+            { name: 'SwapTotal', value: 0 },
+            { name: 'SwapFree', value: 0 },
+            { name: 'Slab', value: 0 },
+            { name: 'Committed_AS', value: 0 }
+        ];
+
+        const memoryTableBody = document.querySelector('#memory-values tbody');
+        const memoryTrendChartCtx = document.getElementById('memory-trend-chart').getContext('2d');
+        const historyDiv = document.getElementById('history');
+
+        const memoryTrendChart = new Chart(memoryTrendChartCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: memoryMetrics.map(metric => ({
+                    label: metric.name,
+                    data: [],
+                    fill: false,
+                    borderColor: `#${Math.floor(Math.random()*16777215).toString(16)}`,
+                    tension: 0.1
+                }))
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Value (MB)'
+                        }
+                    }
+                }
+            }
+        });
+
+        function formatToMB(value) {
+            return (value / (1024 * 1024)).toFixed(2) + ' GB';
+        }
+
+        function updateMemoryTable() {
+            memoryTableBody.innerHTML = '';
+            memoryMetrics.forEach(metric => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${metric.name}</td><td>${formatToMB(metric.value)}</td>`;
+                memoryTableBody.appendChild(row);
+            });
+        }
+
+        function fetchMemoryData() {
+            return fetch('http://localhost:3000/getmem')
+                .then(response => response.json())
+                .then(data => {
+                    memoryMetrics.forEach((metric, index) => {
+                        metric.value = data.metrics[index] || metric.value;
+                    });
+                });
+        }
+
+        function updateMemoryChart() {
+            const timestamp = new Date().toLocaleTimeString();
+            memoryTrendChart.data.labels.push(timestamp);
+
+            memoryTrendChart.data.datasets.forEach((dataset, index) => {
+                dataset.data.push((memoryMetrics[index].value / (1024 * 1024)).toFixed(2));
+            });
+
+            if (memoryTrendChart.data.labels.length > 10) {
+                memoryTrendChart.data.labels.shift();
+                memoryTrendChart.data.datasets.forEach(dataset => dataset.data.shift());
+            }
+
+            memoryTrendChart.update();
+        }
+
+        function logHistory() {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.textContent = `${timestamp} - ` + memoryMetrics.map(m => `${m.name}: ${formatToMB(m.value)}`).join(', ');
+            historyDiv.appendChild(logEntry);
+
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+        }
+
+        function updatePage() {
+            fetchMemoryData().then(() => {
+                updateMemoryTable();
+                updateMemoryChart();
+                logHistory();
+            });
+        }
+
+        updatePage();
+
+        setInterval(updatePage, 10000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPU Logging System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+
+        #chart-container {
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        #history {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: #fff;
+        }
+
+        .log-entry {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        canvas {
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>GPU Logging System</h1>
+
+    <table id="gpu-values">
+        <thead>
+            <tr>
+                <th>Metric</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- GPU rows will be populated dynamically -->
+        </tbody>
+    </table>
+
+    <div id="chart-container">
+        <h2>GPU Metrics Trends</h2>
+        <canvas id="gpu-trend-chart"></canvas>
+    </div>
+
+    <h2>History</h2>
+    <div id="history">
+        <!-- History will be appended dynamically -->
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const gpuMetrics = [
+            { name: 'Utilization (GPU)', value: '0%' },
+            { name: 'Utilization (Memory)', value: '0%' },
+            { name: 'Utilization (Encoder)', value: '0%' },
+            { name: 'Utilization (Decoder)', value: '0%' },
+            { name: 'Fan Speed', value: 'N/A' },
+            { name: 'Temperature (GPU)', value: '0°C' },
+            { name: 'Memory Total', value: '0MiB' },
+            { name: 'Memory Free', value: '0MiB' },
+            { name: 'Memory Used', value: '0MiB' },
+            { name: 'Power Draw', value: '0W' },
+            { name: 'Power Max Limit', value: '0W' },
+            { name: 'Clock Speed (SM)', value: '0MHz' },
+            { name: 'Clock Speed (Memory)', value: '0MHz' },
+            { name: 'Clock Speed (Graphics)', value: '0MHz' },
+            { name: 'Clock Speed (Video)', value: '0MHz' }
+        ];
+
+        const gpuTableBody = document.querySelector('#gpu-values tbody');
+        const gpuTrendChartCtx = document.getElementById('gpu-trend-chart').getContext('2d');
+        const historyDiv = document.getElementById('history');
+
+        const gpuTrendChart = new Chart(gpuTrendChartCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: gpuMetrics.map(metric => ({
+                    label: metric.name,
+                    data: [],
+                    fill: false,
+                    borderColor: `#${Math.floor(Math.random()*16777215).toString(16)}`,
+                    tension: 0.1
+                }))
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Value'
+                        }
+                    }
+                }
+            }
+        });
+
+        function updateGPUTable() {
+            gpuTableBody.innerHTML = '';
+            gpuMetrics.forEach(metric => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${metric.name}</td><td>${metric.value}</td>`;
+                gpuTableBody.appendChild(row);
+            });
+        }
+
+        function fetchGPUData() {
+            return fetch('http://localhost:3000/getgpu')
+                .then(response => response.json())
+                .then(data => {
+                    gpuMetrics.forEach((metric, index) => {
+                        metric.value = data.metrics[index] || metric.value; // Retain units as strings, fallback to existing value
+                    });
+                });
+        }
+
+        function updateGPUChart() {
+            const timestamp = new Date().toLocaleTimeString();
+            gpuTrendChart.data.labels.push(timestamp);
+
+            gpuTrendChart.data.datasets.forEach((dataset, index) => {
+                const numericValue = parseFloat(gpuMetrics[index].value.replace(/[^\d.-]/g, '')) || 0; // Extract numeric value
+                dataset.data.push(numericValue);
+            });
+
+            if (gpuTrendChart.data.labels.length > 10) {
+                gpuTrendChart.data.labels.shift();
+                gpuTrendChart.data.datasets.forEach(dataset => dataset.data.shift());
+            }
+
+            gpuTrendChart.update();
+        }
+
+        function logHistory() {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.textContent = `${timestamp} - ` + gpuMetrics.map(m => `${m.name}: ${m.value}`).join(', ');
+            historyDiv.appendChild(logEntry);
+
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+        }
+
+        function updatePage() {
+            fetchGPUData().then((value) => {
+                updateGPUTable();
+                updateGPUChart();
+                logHistory();
+            });
+        }
+
+        updatePage();
+
+        setInterval(updatePage, 10000);
+    </script>
+</body>
+</html>

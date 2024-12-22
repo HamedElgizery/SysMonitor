@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disk Logging System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+
+        #chart-container {
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        #history {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: #fff;
+        }
+
+        .log-entry {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        canvas {
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Disk Logging System</h1>
+
+    <table id="disk-values">
+        <thead>
+            <tr>
+                <th>Metric</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Disk rows will be populated dynamically -->
+        </tbody>
+    </table>
+
+    <div id="chart-container">
+        <h2>Disk Space Usage</h2>
+        <canvas id="disk-pie-chart"></canvas>
+    </div>
+
+    <h2>History</h2>
+    <div id="history">
+        <!-- History will be appended dynamically -->
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const diskMetrics = [
+            { name: 'Disk Name', value: 'N/A' },
+            { name: 'Total Space', value: '0GB' },
+            { name: 'Used Space', value: '0GB' },
+            { name: 'Free Space', value: '0GB' },
+            { name: 'Used Percentage', value: '0%' },
+            { name: 'SMART Status', value: 'OK' }
+        ];
+
+        const diskTableBody = document.querySelector('#disk-values tbody');
+        const diskPieChartCtx = document.getElementById('disk-pie-chart').getContext('2d');
+        const historyDiv = document.getElementById('history');
+
+        const diskPieChart = new Chart(diskPieChartCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Used Space', 'Free Space'],
+                datasets: [{
+                    data: [0, 100], // Initial dummy data
+                    backgroundColor: ['#FF6384', '#36A2EB'],
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                }
+            }
+        });
+
+        function updateDiskTable() {
+            diskTableBody.innerHTML = '';
+            diskMetrics.forEach(metric => {
+                const row = document.createElement('tr');
+                const valueCell = `<td>${metric.value}</td>`;
+                const statusCell = metric.name === 'SMART Status' && metric.value === 'Failed'
+                    ? `<td style="color: red; font-weight: bold;">${metric.value}</td>`
+                    : valueCell;
+                row.innerHTML = `<td>${metric.name}</td>${statusCell}`;
+                diskTableBody.appendChild(row);
+            });
+        }
+
+        function fetchDiskData() {
+            return fetch('http://localhost:3000/getdisk')
+                .then(response => response.json())
+                .then(data => {
+                    diskMetrics.forEach((metric, index) => {
+                        metric.value = data.metrics[index] || metric.value; // Retain units as strings
+                    });
+
+                    // Update the pie chart with new data
+                    const usedSpace = parseFloat(diskMetrics[2].value.replace(/[^\d.-]/g, '')) || 0;
+                    const freeSpace = parseFloat(diskMetrics[3].value.replace(/[^\d.-]/g, '')) || 0;
+                    diskPieChart.data.datasets[0].data = [usedSpace, freeSpace];
+                    diskPieChart.update();
+                });
+        }
+
+        function logHistory() {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.textContent = `${timestamp} - ` + diskMetrics.map(m => `${m.name}: ${m.value}`).join(', ');
+            historyDiv.appendChild(logEntry);
+
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+        }
+
+        function updatePage() {
+            fetchDiskData().then((value) => {
+                updateDiskTable();
+                logHistory();
+            });
+        }
+
+        updatePage();
+
+        setInterval(updatePage, 30000);
+    </script>
+</body>
+</html>
