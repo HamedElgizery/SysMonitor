@@ -196,7 +196,7 @@ while true; do
         done <<< "$net_output"
 
         TERM=ansi whiptail --title "Network Statistics" \
-          --infobox "$(printf "$net_rows")" 10 150 
+          --infobox "$(printf "$net_rows")" 20 150 
 
         [ $? -eq 1 ] && break
         read -t 0.2 -r -s -N 1 && [[ $REPLY == 'q' ]] && break
